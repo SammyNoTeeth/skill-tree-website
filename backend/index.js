@@ -106,6 +106,36 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
 } else {
   console.warn('GitHub OAuth credentials missing, GitHub login disabled.');
 }
+//
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+  app.get('/api/auth/google/callback', passport.authenticate('google', {
+    failureRedirect: '/login',
+    successRedirect: process.env.CLIENT_URL || '/'
+  }));
+} else {
+  app.get('/api/auth/google', (req, res) => {
+    res.status(503).json({ error: 'OAuth login temporarily unavailable due to missing credentials' });
+  });
+  app.get('/api/auth/google/callback', (req, res) => {
+    res.status(503).json({ error: 'OAuth login temporarily unavailable due to missing credentials' });
+  });
+}
+
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  app.get('/api/auth/github', passport.authenticate('github'));
+  app.get('/api/auth/github/callback', passport.authenticate('github', {
+    failureRedirect: '/login',
+    successRedirect: process.env.CLIENT_URL || '/'
+  }));
+} else {
+  app.get('/api/auth/github', (req, res) => {
+    res.status(503).json({ error: 'OAuth login temporarily unavailable due to missing credentials' });
+  });
+  app.get('/api/auth/github/callback', (req, res) => {
+    res.status(503).json({ error: 'OAuth login temporarily unavailable due to missing credentials' });
+  });
+}
 
 // Health check route
 app.get('/api/health', (req, res) => {
