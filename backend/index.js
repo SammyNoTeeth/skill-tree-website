@@ -112,14 +112,22 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Backend API active' });
 });
 
-// Attach other routes if available
+// Attach individual user and skill routes
 try {
-  const routes = require('./routes');
-  app.use('/api', routes);
+  const usersRouter = require('./routes/users');
+  app.use('/api/users', usersRouter);
 } catch (err) {
-  console.warn('Custom routes could not be loaded:', err.message);
+  console.warn('Users routes could not be loaded:', err.message);
 }
 
+try {
+  const skillsRouter = require('./routes/skills');
+  app.use('/api/skills', skillsRouter);
+} catch (err) {
+  console.warn('Skills routes could not be loaded:', err.message);
+}
+
+// Sync database if available
 if (sequelize) {
   sequelize.sync().catch(err => {
     console.warn('Database sync failed:', err.message);
