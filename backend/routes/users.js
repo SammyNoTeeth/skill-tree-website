@@ -1,6 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { User, Skill, UserSkillProgress } = require('../models');
+
+// Safely load models; if unavailable, fallback gracefully
+let User, Skill, UserSkillProgress;
+try {
+  const models = require('../models');
+  User = models.User;
+  Skill = models.Skill;
+  UserSkillProgress = models.UserSkillProgress;
+} catch (err) {
+  console.warn('Models not available:', err.message);
+}
 
 // Middleware to ensure the requesting user matches the path param.
 function ensureAuthenticated(req, res, next) {
@@ -12,6 +22,10 @@ function ensureAuthenticated(req, res, next) {
 
 // GET /api/users/:id/progress
 router.get('/:id/progress', ensureAuthenticated, async (req, res) => {
+  // If models are not available, return empty result to avoid crashing
+  if (!UserSkillProgress) {
+    return res.json({});
+  }
   // Only allow a user to fetch their own progress
   if (req.user.user_id !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -22,15 +36,20 @@ router.get('/:id/progress', ensureAuthenticated, async (req, res) => {
     progresses.forEach((p) => {
       result[p.skill_id] = p.status;
     });
-    res.json(result);
+    return res.json(result);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch progress' });
+    return res.status(500).json({ error: 'Failed to fetch progress' });
   }
 });
 
 // POST /api/users/:id/progress
 router.post('/:id/progress', ensureAuthenticated, async (req, res) => {
+  // If models are not available, return service unavailable
+  if (!Skill || !UserSkillProgress) {
+    return res.status(503).json({ error: 'Progress functionality unavailable' });
+  }
+  // Only allow a user to modify their own progress
   if (req.user.user_id !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
@@ -56,10 +75,10 @@ router.post('/:id/progress', ensureAuthenticated, async (req, res) => {
       record.last_updated = new Date();
       await record.save();
     }
-    res.json({ id: record.id, skill_id: record.skill_id, status: record.status });
+    return res.json({ id: record.id, skill_id: record.skill_id, status: record.status });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to update progress' });
+    return res.status(500).json({ error: 'Failed to update progress' });
   }
 });
 
