@@ -1,9 +1,9 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-iimport Home from './pages/Home';
+import Home from './pages/Home';
 /*
  * Version 1 of the skill tree site does not include any authentication or
- * user-specific functionality.  To make the site publicly accessible
+ * user-specific functionality. To make the site publicly accessible
  * without a login barrier we remove all references to the login and
  * profile pages and avoid attempting to fetch a current user.  A
  * simplified `App` component renders only the home page.  If future
